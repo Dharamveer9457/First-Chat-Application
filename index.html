@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Application</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    #messages {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chat Application</h1>
+  <div id="messages"></div>
+  <form id="chat-form">
+    <input type="text" id="message-input" placeholder="Enter your message">
+    <button type="submit">Send</button>
+  </form>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+  <script>
+    // Connect to the Socket.IO server
+    const socket = io('http://localhost:3000');
+
+    // Get DOM elements
+    const messageForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const messagesContainer = document.getElementById('messages');
+
+    // Function to display messages
+    function displayMessage(username, message) {
+      const messageElement = document.createElement('div');
+      messageElement.innerHTML = `<strong>${username}:</strong> ${message}`;
+      messagesContainer.appendChild(messageElement);
+    }
+
+    // Handle form submission
+    messageForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        socket.emit('chat message', message);
+        // displayMessage(`${username}`, message);
+        messageInput.value = '';
+      }
+    });
+
+    // Handle incoming chat messages
+    socket.on('chat message', ({ username, message }) => {
+      displayMessage(username, message);
+    });
+
+    // Prompt the user to enter their name and join the chat
+    const username = prompt('Enter your name:');
+    socket.emit('join', username);
+
+    // Handle user joining
+    socket.on('user joined', (username) => {
+      displayMessage('System', `${username} joined the chat`);
+    });
+
+    // Handle user leaving
+    socket.on('user left', (username) => {
+      displayMessage('System', `${username} left the chat`);
+    });
+    
+  </script>
+</body>
+</html>
